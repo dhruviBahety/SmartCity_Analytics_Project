@@ -1,0 +1,26 @@
+Feature,Importance
+Hour,0.2274778070383989
+Is_Weekend,0.05071538344760873
+Is_Peak_Hour,0.04110056176807231
+Traffic_Density_Moderate,0.036191966414151934
+Road_Condition_Icy,0.03557113958509426
+Traffic_Density_High,0.03477673355867194
+Road_Condition_Wet,0.03472017114756101
+Traffic_Density_Low,0.03457728674487375
+Location_Name_Industrial Area,0.03295120914097458
+Vehicle_Type_Truck,0.03263539157287919
+Road_Condition_Dry,0.031982627113307106
+Road_Condition_Under Construction,0.030785571982130874
+Location_Name_Residential Zone,0.03074580641519083
+Location_Name_Suburbs,0.030677580529416708
+Weather_Condition_Clear,0.030019751725180194
+Weather_Condition_Storm,0.02979712404388403
+Vehicle_Type_Motorcycle,0.029201509136665662
+Vehicle_Type_Bicycle,0.029136790703487136
+Weather_Condition_Rain,0.028930978514949805
+Weather_Condition_Fog,0.028690663218406694
+Weather_Condition_Snow,0.028689323061578016
+Vehicle_Type_Car,0.02828303258629661
+Vehicle_Type_Bus,0.027835138303983112
+Location_Name_Downtown,0.027487548964699814
+Location_Name_Highway,0.02701890328253687

@@ -1,0 +1,15 @@
+{
+  "name": "SmartCity",
+  "dataColors": ["#1F6FB2", "#F39C12", "#C0392B", "#27AE60", "#8E5EA2", "#16A5A5", "#7F8C8D", "#E67E22"],
+  "background": "#FFFFFF",
+  "foreground": "#1B2A3A",
+  "tableAccent": "#1F6FB2",
+  "good": "#27AE60",
+  "neutral": "#F39C12",
+  "bad": "#C0392B",
+  "textClasses": {
+    "title": { "fontFace": "Segoe UI Semibold", "fontSize": 12, "color": "#1B2A3A" },
+    "label": { "fontFace": "Segoe UI", "fontSize": 10, "color": "#4A5A6A" },
+    "callout": { "fontFace": "Segoe UI Semibold", "fontSize": 28, "color": "#1F6FB2" }
+  }
+}

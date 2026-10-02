@@ -1,0 +1,121 @@
+// =====================================================================
+// Smart City Dashboard — DAX measures
+// Create a blank table called "_Measures" (Home > Enter Data, no rows)
+// and add every measure below to it. NOT tested inside Power BI Desktop
+// (no Desktop in my environment) — paste, then check each for errors.
+//
+// DATE-OVERLAP FIX: sensor data only covers 1-13 Jan 2024, accidents run
+// to Jul 2024. Every TRAFFIC measure uses REMOVEFILTERS(dim_date) so a
+// date slicer never blanks traffic visuals. Location and Hour are the
+// shared (conformed) dimensions that link the two datasets.
+// =====================================================================
+
+// ---------------- TRAFFIC (date-insensitive) ----------------
+Total Vehicles =
+CALCULATE ( SUM ( fact_traffic[Vehicle_Count] ), REMOVEFILTERS ( dim_date ) )
+
+Avg Vehicle Count =
+CALCULATE ( AVERAGE ( fact_traffic[Vehicle_Count] ), REMOVEFILTERS ( dim_date ) )
+
+Avg Speed =
+CALCULATE ( AVERAGE ( fact_traffic[Average_Speed] ), REMOVEFILTERS ( dim_date ) )
+
+Avg Congestion Index =
+CALCULATE ( AVERAGE ( fact_traffic[Congestion_Index] ), REMOVEFILTERS ( dim_date ) )
+
+Sensor Readings =
+CALCULATE ( COUNTROWS ( fact_traffic ), REMOVEFILTERS ( dim_date ) )
+
+High Congestion % =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( fact_traffic ),
+                fact_traffic[Congestion_Level] = "High",
+                REMOVEFILTERS ( dim_date ) ),
+    [Sensor Readings]
+)
+
+Peak Congestion Index =
+CALCULATE ( [Avg Congestion Index], dim_hour[Time_Period] IN { "Morning Peak", "Evening Peak" } )
+
+Off-Peak Congestion Index =
+CALCULATE ( [Avg Congestion Index], NOT ( dim_hour[Time_Period] IN { "Morning Peak", "Evening Peak" } ) )
+
+Peak Uplift % =
+DIVIDE ( [Peak Congestion Index] - [Off-Peak Congestion Index], [Off-Peak Congestion Index] )
+
+// ---------------- ACCIDENTS (respond to date slicer) ----------------
+Total Accidents = COUNTROWS ( fact_accidents )
+
+Total Casualties = SUM ( fact_accidents[Casualties] )
+
+Avg Casualties per Accident = DIVIDE ( [Total Casualties], [Total Accidents] )
+
+Avg Severity Score = AVERAGE ( fact_accidents[Accident_Severity_Score] )
+
+High-Risk Accidents =
+CALCULATE ( [Total Accidents], fact_accidents[Accident_Severity] IN { "Severe", "Fatal" } )
+
+High-Risk Rate = DIVIDE ( [High-Risk Accidents], [Total Accidents] )
+
+Weekend Accident Share =
+DIVIDE (
+    CALCULATE ( [Total Accidents], dim_date[Is_Weekend] = TRUE () ),
+    [Total Accidents]
+)
+
+Accidents Prev Month =
+CALCULATE ( [Total Accidents], DATEADD ( dim_date[Date], -1, MONTH ) )
+
+Accidents MoM % = DIVIDE ( [Total Accidents] - [Accidents Prev Month], [Accidents Prev Month] )
+
+// ---------------- LINKED (traffic + accidents via Location & Hour) ----------------
+Accidents per 100 Vehicles =
+DIVIDE ( [Total Accidents], [Total Vehicles] ) * 100
+
+Congestion-Accident Priority =
+VAR c = [Avg Congestion Index]
+VAR s = [Avg Severity Score]
+RETURN
+    IF ( ISBLANK ( c ) || ISBLANK ( s ), "No sensor data",
+         IF ( c >= 55 && s >= 6.5, "High Priority", "Monitor" ) )
+
+// Historical (descriptive) risk score from fact_location_hour
+Historical Risk Score = AVERAGE ( fact_location_hour[Historical_Risk_Score] )
+
+Location Risk Rank =
+RANKX ( ALL ( dim_location[Location_Name] ), [Historical Risk Score], , DESC, DENSE )
+
+Risk Color =
+SWITCH ( TRUE (),
+    [Historical Risk Score] >= 66, "#C0392B",
+    [Historical Risk Score] >= 33, "#F39C12",
+    "#27AE60" )
+
+// ---------------- PREDICTIVE (illustrative: model AUC ~0.52) ----------------
+Avg Predicted Risk = AVERAGE ( high_risk_predictions[Predicted_High_Risk_Probability] )
+
+// ---------------- METRIC SWITCH (disconnected table: metric_switch) ----------------
+Selected Metric Value =
+SWITCH (
+    SELECTEDVALUE ( metric_switch[Metric], "Avg Congestion Index" ),
+    "Avg Vehicle Count",     [Avg Vehicle Count],
+    "Avg Speed",             [Avg Speed],
+    "Avg Congestion Index",  [Avg Congestion Index]
+)
+
+Selected Metric Title =
+"Hourly pattern — " & SELECTEDVALUE ( metric_switch[Metric], "Avg Congestion Index" )
+
+// ---------------- DYNAMIC TEXT / TITLES ----------------
+Data Coverage Note =
+"Traffic sensors: "
+    & FORMAT ( CALCULATE ( MIN ( fact_traffic[Date_Time] ), REMOVEFILTERS ( dim_date ) ), "d mmm yyyy" )
+    & " – "
+    & FORMAT ( CALCULATE ( MAX ( fact_traffic[Date_Time] ), REMOVEFILTERS ( dim_date ) ), "d mmm yyyy" )
+    & "  |  Accidents: "
+    & FORMAT ( MIN ( fact_accidents[Date_Time] ), "d mmm yyyy" )
+    & " – "
+    & FORMAT ( MAX ( fact_accidents[Date_Time] ), "d mmm yyyy" )
+
+Location Page Title =
+"Location detail — " & SELECTEDVALUE ( dim_location[Location_Name], "All locations" )

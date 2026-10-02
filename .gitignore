@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Data files
+data/*.csv
+
+# SQLite database
+*.db
+
+# Generated Power BI exports
+powerbi_exports/
+
+# VS Code
+.vscode/
+
+# Python cache
+.pytest_cache/
